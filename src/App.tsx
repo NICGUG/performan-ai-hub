@@ -6,10 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Puestos from "./pages/Puestos";
-import Candidatos from "./pages/Candidatos";
-import Evaluaciones from "./pages/Evaluaciones";
-import IA from "./pages/IA";
-import Reportes from "./pages/Reportes";
+import GeneradorDescripciones from "./pages/GeneradorDescripciones";
+import Analiticas from "./pages/Analiticas";
+import Calendario from "./pages/Calendario";
+import Chat from "./pages/Chat";
 import Configuracion from "./pages/Configuracion";
 import NotFound from "./pages/NotFound";
 
@@ -25,10 +25,10 @@ const App = () => (
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="puestos" element={<Puestos />} />
-            <Route path="candidatos" element={<Candidatos />} />
-            <Route path="evaluaciones" element={<Evaluaciones />} />
-            <Route path="ia" element={<IA />} />
-            <Route path="reportes" element={<Reportes />} />
+            <Route path="generador" element={<GeneradorDescripciones />} />
+            <Route path="analiticas" element={<Analiticas />} />
+            <Route path="calendario" element={<Calendario />} />
+            <Route path="chat" element={<Chat />} />
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

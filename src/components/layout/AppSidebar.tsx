@@ -1,13 +1,14 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Building2,
-  Users,
-  ClipboardCheck,
   Bot,
   BarChart3,
   Settings,
   Home,
-  Target
+  Target,
+  Calendar,
+  MessageCircle,
+  Sparkles
 } from "lucide-react";
 
 import {
@@ -26,10 +27,10 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Puestos", url: "/puestos", icon: Building2 },
-  { title: "Candidatos", url: "/candidatos", icon: Users },
-  { title: "Evaluaciones", url: "/evaluaciones", icon: ClipboardCheck },
-  { title: "IA & Automatizaciones", url: "/ia", icon: Bot },
-  { title: "Reportes", url: "/reportes", icon: BarChart3 },
+  { title: "Generador descripciones", url: "/generador", icon: Sparkles },
+  { title: "Analíticas", url: "/analiticas", icon: BarChart3 },
+  { title: "Calendario", url: "/calendario", icon: Calendar },
+  { title: "Chat", url: "/chat", icon: MessageCircle },
 ];
 
 const configItems = [
