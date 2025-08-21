@@ -62,16 +62,16 @@ export default function Puestos() {
   const fetchPuestos = async () => {
     try {
       const { data, error } = await supabase
-        .from('puestos')
+        .from('puestos' as any)
         .select('*')
         .order('fecha_creacion', { ascending: false });
 
       if (error) throw error;
-      setPuestos(data || []);
+      setPuestos((data || []) as unknown as Puesto[]);
       
       // Fetch documents for each position
       if (data && data.length > 0) {
-        await fetchDocumentos(data.map(p => p.id));
+        await fetchDocumentos(data.map((p: any) => p.id));
       }
     } catch (error) {
       toast({
@@ -87,13 +87,13 @@ export default function Puestos() {
   const fetchDocumentos = async (puestoIds: string[]) => {
     try {
       const { data, error } = await supabase
-        .from('documentos_puesto')
+        .from('documentos_puesto' as any)
         .select('*')
         .in('puesto_id', puestoIds);
 
       if (error) throw error;
       
-      const docsGrouped = (data || []).reduce((acc, doc) => {
+      const docsGrouped = (data || []).reduce((acc: any, doc: any) => {
         if (!acc[doc.puesto_id]) acc[doc.puesto_id] = [];
         acc[doc.puesto_id].push(doc);
         return acc;
@@ -120,7 +120,7 @@ export default function Puestos() {
 
       // Save document reference in database
       const { error: dbError } = await supabase
-        .from('documentos_puesto')
+        .from('documentos_puesto' as any)
         .insert({
           puesto_id: puestoId,
           nombre_archivo: file.name,

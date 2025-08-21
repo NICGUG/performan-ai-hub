@@ -14,7 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documentos_puesto: {
+        Row: {
+          created_at: string
+          fecha_subida: string
+          id: string
+          nombre_archivo: string
+          puesto_id: string
+          ruta_archivo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fecha_subida?: string
+          id?: string
+          nombre_archivo: string
+          puesto_id: string
+          ruta_archivo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fecha_subida?: string
+          id?: string
+          nombre_archivo?: string
+          puesto_id?: string
+          ruta_archivo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_puesto_puesto_id_fkey"
+            columns: ["puesto_id"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluaciones_puesto: {
+        Row: {
+          comentarios: string | null
+          created_at: string
+          criterio: string
+          fecha_evaluacion: string
+          id: string
+          puesto_id: string
+          puntuacion: number | null
+          updated_at: string
+        }
+        Insert: {
+          comentarios?: string | null
+          created_at?: string
+          criterio: string
+          fecha_evaluacion?: string
+          id?: string
+          puesto_id: string
+          puntuacion?: number | null
+          updated_at?: string
+        }
+        Update: {
+          comentarios?: string | null
+          created_at?: string
+          criterio?: string
+          fecha_evaluacion?: string
+          id?: string
+          puesto_id?: string
+          puntuacion?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluaciones_puesto_puesto_id_fkey"
+            columns: ["puesto_id"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      puestos: {
+        Row: {
+          area: string
+          created_at: string
+          descripcion: string | null
+          estado: string
+          fecha_creacion: string
+          id: string
+          propietario: string | null
+          titulo: string
+          ubicacion: string | null
+          ultima_accion: string | null
+          updated_at: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_creacion?: string
+          id?: string
+          propietario?: string | null
+          titulo: string
+          ubicacion?: string | null
+          ultima_accion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_creacion?: string
+          id?: string
+          propietario?: string | null
+          titulo?: string
+          ubicacion?: string | null
+          ultima_accion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
