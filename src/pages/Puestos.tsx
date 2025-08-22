@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Puesto {
   id: string;
@@ -170,6 +171,13 @@ export default function Puestos() {
     }
   };
 
+  const getDocumentPreviewUrl = (documento: DocumentoPuesto) => {
+    const { data } = supabase.storage
+      .from('documentos')
+      .getPublicUrl(documento.ruta_archivo);
+    return data.publicUrl;
+  };
+
   const filteredPuestos = puestos.filter(puesto => 
     puesto.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     puesto.area.toLowerCase().includes(searchTerm.toLowerCase())
@@ -273,18 +281,43 @@ export default function Puestos() {
                           <FileText className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium">Documentos ({documentos[puesto.id].length})</span>
                         </div>
-                        <div className="space-y-1">
+                         <div className="space-y-1">
                           {documentos[puesto.id].map((doc) => (
                             <div key={doc.id} className="flex items-center justify-between text-xs">
                               <span className="truncate">{doc.nombre_archivo}</span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleFileDownload(doc)}
-                                className="h-6 px-2"
-                              >
-                                <Download className="w-3 h-3" />
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl h-[80vh]">
+                                    <DialogHeader>
+                                      <DialogTitle>{doc.nombre_archivo}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex-1 overflow-hidden">
+                                      <iframe
+                                        src={`https://docs.google.com/gview?url=${encodeURIComponent(getDocumentPreviewUrl(doc))}&embedded=true`}
+                                        className="w-full h-full border-0"
+                                        title={doc.nombre_archivo}
+                                      />
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleFileDownload(doc)}
+                                  className="h-6 px-2"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>

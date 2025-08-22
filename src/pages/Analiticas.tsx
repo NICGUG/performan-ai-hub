@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BarChart3, Download, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+
+interface AnalyticsData {
+  area: string;
+  calidadRedaccion: number;
+  ajusteEstilo: number;
+  coberturaCompetencias: number;
+  totalPuestos: number;
+}
 
 const mockDataPorArea = [
   {
@@ -96,19 +105,93 @@ const formatDelta = (delta: number) => {
 export default function Analiticas() {
   const [selectedArea, setSelectedArea] = useState("todas");
   const [selectedDimension, setSelectedDimension] = useState("todas");
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch evaluations with position data
+      const { data: evaluaciones, error } = await supabase
+        .from('evaluaciones_puesto')
+        .select(`
+          *,
+          puestos (
+            titulo,
+            area
+          )
+        `);
+
+      if (error) throw error;
+
+      // Group by area and calculate averages
+      const dataByArea: { [key: string]: any } = {};
+      
+      evaluaciones?.forEach((evaluacion: any) => {
+        const area = evaluacion.puestos?.area || 'Sin área';
+        
+        if (!dataByArea[area]) {
+          dataByArea[area] = {
+            area,
+            calidadRedaccion: [],
+            ajusteEstilo: [],
+            coberturaCompetencias: [],
+            puestos: new Set()
+          };
+        }
+        
+        dataByArea[area].puestos.add(evaluacion.puesto_id);
+        
+        if (evaluacion.criterio === 'Calidad Redacción') {
+          dataByArea[area].calidadRedaccion.push(evaluacion.puntuacion);
+        } else if (evaluacion.criterio === 'Ajuste Estilo') {
+          dataByArea[area].ajusteEstilo.push(evaluacion.puntuacion);
+        } else if (evaluacion.criterio === 'Cobertura Competencias') {
+          dataByArea[area].coberturaCompetencias.push(evaluacion.puntuacion);
+        }
+      });
+      
+      // Calculate averages
+      const analyticsResult = Object.values(dataByArea).map((areaData: any) => ({
+        area: areaData.area,
+        calidadRedaccion: areaData.calidadRedaccion.length > 0 
+          ? areaData.calidadRedaccion.reduce((a: number, b: number) => a + b, 0) / areaData.calidadRedaccion.length 
+          : 0,
+        ajusteEstilo: areaData.ajusteEstilo.length > 0 
+          ? areaData.ajusteEstilo.reduce((a: number, b: number) => a + b, 0) / areaData.ajusteEstilo.length 
+          : 0,
+        coberturaCompetencias: areaData.coberturaCompetencias.length > 0 
+          ? areaData.coberturaCompetencias.reduce((a: number, b: number) => a + b, 0) / areaData.coberturaCompetencias.length 
+          : 0,
+        totalPuestos: areaData.puestos.size
+      }));
+      
+      setAnalyticsData(analyticsResult);
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExportCSV = (data: any[], filename: string) => {
     // Mock CSV export functionality
     console.log(`Exportando ${filename}:`, data);
   };
 
-  const topMejoras = mockComparacionesPuestos
-    .sort((a, b) => (b.deltaCalidad + b.deltaEstilo + b.deltaCompetencias) - (a.deltaCalidad + a.deltaEstilo + a.deltaCompetencias))
-    .slice(0, 3);
 
-  const topCaidas = mockComparacionesPuestos
-    .sort((a, b) => (a.deltaCalidad + a.deltaEstilo + a.deltaCompetencias) - (b.deltaCalidad + b.deltaEstilo + b.deltaCompetencias))
-    .slice(0, 3);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Cargando analíticas...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -191,7 +274,7 @@ export default function Analiticas() {
                 <BarChart3 className="w-5 h-5 text-primary" />
                 Medias por Área y Dimensión
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExportCSV(mockDataPorArea, "medias-por-area")}>
+              <Button variant="outline" size="sm" onClick={() => handleExportCSV(analyticsData, "medias-por-area")}>
                 <Download className="w-4 h-4 mr-2" />
                 Exportar CSV
               </Button>
@@ -214,7 +297,7 @@ export default function Analiticas() {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockDataPorArea.map((area, index) => (
+                    {analyticsData.map((area, index) => (
                       <tr key={index} className="border-b">
                         <td className="py-3 font-medium">{area.area}</td>
                         <td className="text-center">
@@ -237,105 +320,13 @@ export default function Analiticas() {
         </TabsContent>
 
         <TabsContent value="vs-pasado" className="space-y-6">
-          {/* Summary cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="shadow-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  Mayores Mejoras
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {topMejoras.map((puesto, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="font-medium">{puesto.puesto}</span>
-                      <span className="text-success">+{((puesto.deltaCalidad + puesto.deltaEstilo + puesto.deltaCompetencias) / 3).toFixed(1)}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4 text-destructive" />
-                  Mayores Caídas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {topCaidas.map((puesto, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="font-medium">{puesto.puesto}</span>
-                      <span className="text-destructive">{((puesto.deltaCalidad + puesto.deltaEstilo + puesto.deltaCompetencias) / 3).toFixed(1)}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detailed comparison table */}
           <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Comparación vs. Versión Anterior</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExportCSV(mockComparacionesPuestos, "comparacion-versiones")}>
-                <Download className="w-4 h-4 mr-2" />
-                Exportar CSV
-              </Button>
+            <CardHeader>
+              <CardTitle>Comparaciones por Versión</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Puesto</th>
-                      <th className="text-left py-2">Área</th>
-                      <th className="text-center py-2">Δ Calidad</th>
-                      <th className="text-center py-2">Δ Estilo</th>
-                      <th className="text-center py-2">Δ Competencias</th>
-                      <th className="text-center py-2">Versiones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockComparacionesPuestos.map((puesto, index) => {
-                      const DeltaCalidadIcon = getDeltaIcon(puesto.deltaCalidad);
-                      const DeltaEstiloIcon = getDeltaIcon(puesto.deltaEstilo);
-                      const DeltaCompetenciasIcon = getDeltaIcon(puesto.deltaCompetencias);
-
-                      return (
-                        <tr key={index} className="border-b">
-                          <td className="py-3 font-medium">{puesto.puesto}</td>
-                          <td className="py-3 text-muted-foreground">{puesto.area}</td>
-                          <td className="text-center">
-                            <div className={`flex items-center justify-center gap-1 ${getDeltaColor(puesto.deltaCalidad)}`}>
-                              <DeltaCalidadIcon className="w-3 h-3" />
-                              <span className="text-xs">{formatDelta(puesto.deltaCalidad)}</span>
-                            </div>
-                          </td>
-                          <td className="text-center">
-                            <div className={`flex items-center justify-center gap-1 ${getDeltaColor(puesto.deltaEstilo)}`}>
-                              <DeltaEstiloIcon className="w-3 h-3" />
-                              <span className="text-xs">{formatDelta(puesto.deltaEstilo)}</span>
-                            </div>
-                          </td>
-                          <td className="text-center">
-                            <div className={`flex items-center justify-center gap-1 ${getDeltaColor(puesto.deltaCompetencias)}`}>
-                              <DeltaCompetenciasIcon className="w-3 h-3" />
-                              <span className="text-xs">{formatDelta(puesto.deltaCompetencias)}</span>
-                            </div>
-                          </td>
-                          <td className="text-center text-xs text-muted-foreground">
-                            {new Date(puesto.fechaActual).toLocaleDateString()} vs {new Date(puesto.fechaAnterior).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="text-center text-muted-foreground py-8">
+                Funcionalidad de comparación temporal próximamente disponible
               </div>
             </CardContent>
           </Card>
