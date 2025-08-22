@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 
 interface AnalyticsData {
   area: string;
-  calidadRedaccion: number;
-  ajusteEstilo: number;
-  coberturaCompetencias: number;
+  formacionBasica: number;
+  experiencia: number;
+  autonomia: number;
+  responsabilidadPorEquipo: number;
   totalPuestos: number;
 }
 
@@ -138,35 +139,41 @@ export default function Analiticas() {
         if (!dataByArea[area]) {
           dataByArea[area] = {
             area,
-            calidadRedaccion: [],
-            ajusteEstilo: [],
-            coberturaCompetencias: [],
+            formacionBasica: [],
+            experiencia: [],
+            autonomia: [],
+            responsabilidadPorEquipo: [],
             puestos: new Set()
           };
         }
         
         dataByArea[area].puestos.add(evaluacion.puesto_id);
         
-        if (evaluacion.criterio === 'Calidad Redacción') {
-          dataByArea[area].calidadRedaccion.push(evaluacion.puntuacion);
-        } else if (evaluacion.criterio === 'Ajuste Estilo') {
-          dataByArea[area].ajusteEstilo.push(evaluacion.puntuacion);
-        } else if (evaluacion.criterio === 'Cobertura Competencias') {
-          dataByArea[area].coberturaCompetencias.push(evaluacion.puntuacion);
+        if (evaluacion.criterio === 'Formación básica') {
+          dataByArea[area].formacionBasica.push(evaluacion.puntuacion);
+        } else if (evaluacion.criterio === 'Experiencia') {
+          dataByArea[area].experiencia.push(evaluacion.puntuacion);
+        } else if (evaluacion.criterio === 'Autonomía') {
+          dataByArea[area].autonomia.push(evaluacion.puntuacion);
+        } else if (evaluacion.criterio === 'Responsabilidad por equipo') {
+          dataByArea[area].responsabilidadPorEquipo.push(evaluacion.puntuacion);
         }
       });
       
       // Calculate averages
       const analyticsResult = Object.values(dataByArea).map((areaData: any) => ({
         area: areaData.area,
-        calidadRedaccion: areaData.calidadRedaccion.length > 0 
-          ? areaData.calidadRedaccion.reduce((a: number, b: number) => a + b, 0) / areaData.calidadRedaccion.length 
+        formacionBasica: areaData.formacionBasica.length > 0 
+          ? areaData.formacionBasica.reduce((a: number, b: number) => a + b, 0) / areaData.formacionBasica.length 
           : 0,
-        ajusteEstilo: areaData.ajusteEstilo.length > 0 
-          ? areaData.ajusteEstilo.reduce((a: number, b: number) => a + b, 0) / areaData.ajusteEstilo.length 
+        experiencia: areaData.experiencia.length > 0 
+          ? areaData.experiencia.reduce((a: number, b: number) => a + b, 0) / areaData.experiencia.length 
           : 0,
-        coberturaCompetencias: areaData.coberturaCompetencias.length > 0 
-          ? areaData.coberturaCompetencias.reduce((a: number, b: number) => a + b, 0) / areaData.coberturaCompetencias.length 
+        autonomia: areaData.autonomia.length > 0 
+          ? areaData.autonomia.reduce((a: number, b: number) => a + b, 0) / areaData.autonomia.length 
+          : 0,
+        responsabilidadPorEquipo: areaData.responsabilidadPorEquipo.length > 0 
+          ? areaData.responsabilidadPorEquipo.reduce((a: number, b: number) => a + b, 0) / areaData.responsabilidadPorEquipo.length 
           : 0,
         totalPuestos: areaData.puestos.size
       }));
@@ -234,9 +241,10 @@ export default function Analiticas() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas las dimensiones</SelectItem>
-                    <SelectItem value="calidad">Calidad de redacción</SelectItem>
-                    <SelectItem value="estilo">Ajuste al estilo</SelectItem>
-                    <SelectItem value="competencias">Cobertura competencias</SelectItem>
+                    <SelectItem value="formacion">Formación básica</SelectItem>
+                    <SelectItem value="experiencia">Experiencia</SelectItem>
+                    <SelectItem value="autonomia">Autonomía</SelectItem>
+                    <SelectItem value="responsabilidad">Responsabilidad por equipo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -290,9 +298,10 @@ export default function Analiticas() {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-2">Área</th>
-                      <th className="text-center py-2">Calidad Redacción</th>
-                      <th className="text-center py-2">Ajuste Estilo</th>
-                      <th className="text-center py-2">Cobertura Competencias</th>
+                      <th className="text-center py-2">Formación Básica</th>
+                      <th className="text-center py-2">Experiencia</th>
+                      <th className="text-center py-2">Autonomía</th>
+                      <th className="text-center py-2">Responsabilidad por Equipo</th>
                       <th className="text-center py-2">Total Puestos</th>
                     </tr>
                   </thead>
@@ -301,13 +310,16 @@ export default function Analiticas() {
                       <tr key={index} className="border-b">
                         <td className="py-3 font-medium">{area.area}</td>
                         <td className="text-center">
-                          <Badge variant="outline">{area.calidadRedaccion.toFixed(1)}</Badge>
+                          <Badge variant="outline">{area.formacionBasica.toFixed(1)}</Badge>
                         </td>
                         <td className="text-center">
-                          <Badge variant="outline">{area.ajusteEstilo.toFixed(1)}</Badge>
+                          <Badge variant="outline">{area.experiencia.toFixed(1)}</Badge>
                         </td>
                         <td className="text-center">
-                          <Badge variant="outline">{area.coberturaCompetencias.toFixed(1)}</Badge>
+                          <Badge variant="outline">{area.autonomia.toFixed(1)}</Badge>
+                        </td>
+                        <td className="text-center">
+                          <Badge variant="outline">{area.responsabilidadPorEquipo.toFixed(1)}</Badge>
                         </td>
                         <td className="text-center text-muted-foreground">{area.totalPuestos}</td>
                       </tr>

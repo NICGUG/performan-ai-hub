@@ -178,6 +178,21 @@ export default function Puestos() {
     return data.publicUrl;
   };
 
+  const DocumentPreview = ({ documento }: { documento: DocumentoPuesto }) => {
+    const previewUrl = getDocumentPreviewUrl(documento);
+    
+    return (
+      <div className="w-full h-full">
+        <iframe
+          src={`https://docs.google.com/gview?url=${encodeURIComponent(previewUrl)}&embedded=true`}
+          className="w-full h-full border-0"
+          title={documento.nombre_archivo}
+          onError={() => console.log('Error loading document preview')}
+        />
+      </div>
+    );
+  };
+
   const filteredPuestos = puestos.filter(puesto => 
     puesto.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     puesto.area.toLowerCase().includes(searchTerm.toLowerCase())
@@ -296,16 +311,12 @@ export default function Puestos() {
                                       <Eye className="w-3 h-3" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent className="max-w-4xl h-[80vh]">
+                                  <DialogContent className="max-w-6xl h-[90vh]">
                                     <DialogHeader>
                                       <DialogTitle>{doc.nombre_archivo}</DialogTitle>
                                     </DialogHeader>
-                                    <div className="flex-1 overflow-hidden">
-                                      <iframe
-                                        src={`https://docs.google.com/gview?url=${encodeURIComponent(getDocumentPreviewUrl(doc))}&embedded=true`}
-                                        className="w-full h-full border-0"
-                                        title={doc.nombre_archivo}
-                                      />
+                                    <div className="flex-1 h-full">
+                                      <DocumentPreview documento={doc} />
                                     </div>
                                   </DialogContent>
                                 </Dialog>
