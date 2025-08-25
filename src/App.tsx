@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Puestos from "./pages/Puestos";
 import GeneradorDescripciones from "./pages/GeneradorDescripciones";
@@ -11,6 +12,7 @@ import Analiticas from "./pages/Analiticas";
 import Calendario from "./pages/Calendario";
 import Chat from "./pages/Chat";
 import Configuracion from "./pages/Configuracion";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +24,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<AppLayout />}>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
             <Route index element={<Dashboard />} />
             <Route path="puestos" element={<Puestos />} />
             <Route path="generador" element={<GeneradorDescripciones />} />
