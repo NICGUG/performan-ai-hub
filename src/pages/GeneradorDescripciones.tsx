@@ -1,82 +1,141 @@
-import { useState } from "react";
-import { Sparkles, Upload, Settings, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
-const mockRequests = [
-  {
-    id: "1",
-    titulo: "Operador de Báscula",
-    estado: "procesando",
-    fechaCreacion: "2024-01-15T10:30:00",
-    sector: "Energía",
-    estilo: "Atlantic Copper 2025",
-    progreso: 75,
-  },
-  {
-    id: "2",
-    titulo: "Técnico Aux. Gestión Ambiental",
-    estado: "devuelto",
-    fechaCreacion: "2024-01-14T14:20:00",
-    sector: "Medio Ambiente",
-    estilo: "Atlantic Copper 2025",
-    resultado: "Descripción generada exitosamente",
-  },
-  {
-    id: "3",
-    titulo: "Supervisor de Operaciones",
-    estado: "en_cola",
-    fechaCreacion: "2024-01-15T16:45:00",
-    sector: "Operaciones",
-    estilo: "Atlantic Copper 2025",
-  },
-];
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
 
-const getStatusColor = (estado: string) => {
-  switch (estado) {
-    case "devuelto":
-      return "bg-success text-success-foreground";
-    case "procesando":
-      return "bg-warning text-warning-foreground";
-    case "en_cola":
-      return "bg-muted text-muted-foreground";
-    case "error":
-      return "bg-destructive text-destructive-foreground";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-};
-
-const getStatusIcon = (estado: string) => {
-  switch (estado) {
-    case "devuelto":
-      return CheckCircle;
-    case "procesando":
-      return Loader2;
-    case "en_cola":
-      return Clock;
-    case "error":
-      return AlertCircle;
-    default:
-      return Clock;
-  }
-};
+interface N8nResponse {
+  descripcion?: string;
+  valoracion?: string;
+  error?: string;
+}
 
 export default function GeneradorDescripciones() {
-  const [activeTab, setActiveTab] = useState("nuevo");
-  const [formData, setFormData] = useState({
-    titulo: "",
-    sector: "",
-    estilo: "",
-    idioma: "es-ES",
-    notas: "",
-  });
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      content: "¡Hola! Soy tu asistente de generación de descripciones de puestos. Escribe el nombre del puesto que quieres generar y te ayudaré con la descripción y valoración.",
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    if (!n8nWebhookUrl.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor, configura la URL del webhook de n8n primero.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputMessage.trim(),
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(n8nWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          puesto: inputMessage.trim(),
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: N8nResponse = await response.json();
+      
+      let botResponseContent = "";
+      if (data.descripcion && data.valoracion) {
+        botResponseContent = `**Descripción del puesto:**\n\n${data.descripcion}\n\n**Valoración:**\n\n${data.valoracion}`;
+      } else if (data.descripcion) {
+        botResponseContent = `**Descripción del puesto:**\n\n${data.descripcion}`;
+      } else if (data.error) {
+        botResponseContent = `Error: ${data.error}`;
+      } else {
+        botResponseContent = "Lo siento, no pude generar la descripción del puesto. Por favor, intenta de nuevo.";
+      }
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: botResponseContent,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+
+      toast({
+        title: "Descripción generada",
+        description: "La descripción del puesto ha sido generada exitosamente.",
+      });
+
+    } catch (error) {
+      console.error("Error calling n8n webhook:", error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Lo siento, hubo un error al conectar con el flujo de n8n. Por favor, verifica la URL del webhook y tu conexión.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: "Error",
+        description: "No se pudo conectar con el flujo de n8n. Verifica la configuración.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -85,188 +144,115 @@ export default function GeneradorDescripciones() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Generador de Descripciones</h1>
           <p className="text-muted-foreground">
-            Genera descripciones de puestos con IA integrada y n8n.
+            Chat con IA para generar descripciones de puestos via n8n.
           </p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="nuevo">Generar Nueva</TabsTrigger>
-          <TabsTrigger value="cola">Cola de Procesos ({mockRequests.length})</TabsTrigger>
-        </TabsList>
+      {/* n8n Webhook Configuration */}
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="text-lg">Configuración n8n</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <label htmlFor="webhook-url" className="text-sm font-medium">
+              URL del Webhook de n8n
+            </label>
+            <Input
+              id="webhook-url"
+              placeholder="https://tu-n8n-instance.com/webhook/tu-webhook-id"
+              value={n8nWebhookUrl}
+              onChange={(e) => setN8nWebhookUrl(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="nuevo" className="space-y-6">
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Nueva Generación con IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="titulo">Título del Puesto</Label>
-                  <Input
-                    id="titulo"
-                    placeholder="Ej: Operador de Báscula"
-                    value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sector">Sector</Label>
-                  <Select value={formData.sector} onValueChange={(value) => setFormData({ ...formData, sector: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona sector" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="energia">Energía</SelectItem>
-                      <SelectItem value="seguros">Seguros</SelectItem>
-                      <SelectItem value="retail">Retail</SelectItem>
-                      <SelectItem value="operaciones">Operaciones</SelectItem>
-                      <SelectItem value="medioambiente">Medio Ambiente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estilo">Estilo de Redacción</Label>
-                  <Select value={formData.estilo} onValueChange={(value) => setFormData({ ...formData, estilo: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona estilo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="atlantic-copper-2025">Atlantic Copper 2025</SelectItem>
-                      <SelectItem value="seguros-general">Seguros General</SelectItem>
-                      <SelectItem value="energia-tecnico">Energía Técnico</SelectItem>
-                      <SelectItem value="retail-comercial">Retail Comercial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="idioma">Idioma</Label>
-                  <Select value={formData.idioma} onValueChange={(value) => setFormData({ ...formData, idioma: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="es-ES">Español (España)</SelectItem>
-                      <SelectItem value="en-US">English (US)</SelectItem>
-                      <SelectItem value="fr-FR">Français</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notas">Notas Adicionales</Label>
-                <Textarea
-                  id="notas"
-                  placeholder="Incluye detalles específicos, terminología interna, o documentos de referencia..."
-                  rows={4}
-                  value={formData.notas}
-                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <Label>Documentos Adjuntos</Label>
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Arrastra archivos aquí o haz clic para seleccionar
-                  </p>
-                  <Button variant="outline" size="sm">
-                    Seleccionar Archivos
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configuración Avanzada
-                </Button>
-                <Button>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generar con IA (n8n)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cola" className="space-y-4">
-          {mockRequests.map((request) => {
-            const StatusIcon = getStatusIcon(request.estado);
-            return (
-              <Card key={request.id} className="shadow-card hover:shadow-floating transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <StatusIcon className={`w-5 h-5 ${request.estado === "procesando" ? "animate-spin" : ""}`} />
-                        <h3 className="text-lg font-semibold">{request.titulo}</h3>
-                        <Badge className={getStatusColor(request.estado)}>
-                          {request.estado.replace("_", " ")}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                        <div>
-                          <span className="font-medium">Sector:</span> {request.sector}
-                        </div>
-                        <div>
-                          <span className="font-medium">Estilo:</span> {request.estilo}
-                        </div>
-                        <div>
-                          <span className="font-medium">Creado:</span> {new Date(request.fechaCreacion).toLocaleString("es-ES")}
-                        </div>
-                      </div>
-
-                      {request.progreso && (
-                        <div className="mt-3">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Progreso</span>
-                            <span>{request.progreso}%</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div 
-                              className="bg-primary h-2 rounded-full transition-all duration-300" 
-                              style={{ width: `${request.progreso}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {request.resultado && (
-                        <div className="mt-3 text-sm text-muted-foreground">
-                          <span className="font-medium">Resultado:</span> {request.resultado}
-                        </div>
-                      )}
+      {/* Chat Interface */}
+      <Card className="shadow-card h-[600px] flex flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="w-5 h-5 text-primary" />
+            Chat de Generación
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col p-0">
+          {/* Messages */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {message.sender === 'bot' && (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-primary" />
                     </div>
-
-                    <div className="flex items-center gap-2 ml-4">
-                      {request.estado === "devuelto" && (
-                        <Button variant="outline" size="sm">
-                          Ver Resultado
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="sm">
-                        Detalles
-                      </Button>
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.sender === 'user'
+                        ? 'bg-primary text-primary-foreground ml-auto'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                    <div className="text-xs opacity-70 mt-1">
+                      {message.timestamp.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </TabsContent>
-      </Tabs>
+                  {message.sender === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="bg-muted rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          {/* Input */}
+          <div className="border-t p-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Escribe el nombre del puesto (ej: Operador de Báscula)..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button 
+                onClick={sendMessage} 
+                disabled={isLoading || !inputMessage.trim()}
+                size="icon"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
