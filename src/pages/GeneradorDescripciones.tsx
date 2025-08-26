@@ -30,8 +30,10 @@ export default function GeneradorDescripciones() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [n8nWebhookUrl, setN8nWebhookUrl] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Fixed n8n webhook URL
+  const n8nWebhookUrl = "http://localhost:5678/webhook-test/valoracion-puestos";
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -44,15 +46,6 @@ export default function GeneradorDescripciones() {
 
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
-
-    if (!n8nWebhookUrl.trim()) {
-      toast({
-        title: "Error",
-        description: "Por favor, configura la URL del webhook de n8n primero.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -149,25 +142,6 @@ export default function GeneradorDescripciones() {
         </div>
       </div>
 
-      {/* n8n Webhook Configuration */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Configuración n8n</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <label htmlFor="webhook-url" className="text-sm font-medium">
-              URL del Webhook de n8n
-            </label>
-            <Input
-              id="webhook-url"
-              placeholder="https://tu-n8n-instance.com/webhook/tu-webhook-id"
-              value={n8nWebhookUrl}
-              onChange={(e) => setN8nWebhookUrl(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Chat Interface */}
       <Card className="shadow-card h-[600px] flex flex-col">
