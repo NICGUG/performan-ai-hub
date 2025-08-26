@@ -25,18 +25,18 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
+          <Route element={
             <ProtectedRoute>
               <AppLayout />
             </ProtectedRoute>
           }>
-            <Route index element={<Dashboard />} />
-            <Route path="puestos" element={<Puestos />} />
-            <Route path="generador" element={<GeneradorDescripciones />} />
-            <Route path="analiticas" element={<Analiticas />} />
-            <Route path="calendario" element={<Calendario />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="configuracion" element={<Configuracion />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/puestos" element={<Puestos />} />
+            <Route path="/generador" element={<GeneradorDescripciones />} />
+            <Route path="/analiticas" element={<Analiticas />} />
+            <Route path="/calendario" element={<Calendario />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/configuracion" element={<Configuracion />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
