@@ -1,78 +1,64 @@
+import { useState, useEffect } from "react";
 import { Building2, Bot, TrendingUp, Calendar, Clock, CheckCircle, AlertCircle, MessageCircle, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { TaskItem } from "@/components/dashboard/TaskItem";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
-const mockTasks = [
-  {
-    id: "1",
-    title: "Revisar descripción generada",
-    description: "Operador de Báscula - IA completada",
-    priority: "high" as const,
-    status: "pending" as const,
-    dueTime: "10:30",
-  },
-  {
-    id: "2",
-    title: "Evaluación de puesto programada",
-    description: "Técnico Aux. Gestión Ambiental",
-    priority: "medium" as const,
-    status: "in-progress" as const,
-    dueTime: "14:00",
-  },
-  {
-    id: "3",
-    title: "Aprobar publicación",
-    description: "Supervisor de Operaciones",
-    priority: "low" as const,
-    status: "pending" as const,
-    dueTime: "16:00",
-  },
-];
-
-const mockProximasEvaluaciones = [
-  {
-    id: "1",
-    titulo: "Evaluación de puesto — Operador de Báscula",
-    fecha: "2024-01-22",
-    hora: "10:00",
-    puesto: "Operador de Báscula",
-  },
-  {
-    id: "2",
-    titulo: "Evaluación de puesto — Técnico Aux. Gestión Ambiental",
-    fecha: "2024-01-23",
-    hora: "14:30",
-    puesto: "Técnico Aux. Gestión Ambiental",
-  },
-];
-
-const mockActividadReciente = [
-  {
-    id: "1",
-    usuario: "Coordinador",
-    accion: "ha revisado la descripción de",
-    objeto: "Operador de Báscula",
-    timestamp: "hace 5 min",
-  },
-  {
-    id: "2",
-    usuario: "IA (n8n)",
-    accion: "completó la generación para",
-    objeto: "Técnico Aux. Gestión Ambiental",
-    timestamp: "hace 12 min",
-  },
-  {
-    id: "3",
-    usuario: "Coordinador",
-    accion: "programó evaluación para",
-    objeto: "Supervisor de Operaciones",
-    timestamp: "hace 1 hora",
-  },
-];
+interface CalendarEvent {
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  fecha_inicio: string;
+  tipo: string;
+  estado: string;
+  prioridad: string;
+}
 
 export default function Dashboard() {
+  const [proximasEvaluaciones, setProximasEvaluaciones] = useState<CalendarEvent[]>([]);
+  const { user } = useAuth();
+
+  // Cargar próximas evaluaciones desde el calendario
+  const loadProximasEvaluaciones = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('eventos_calendario')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('fecha_inicio', new Date().toISOString())
+        .order('fecha_inicio', { ascending: true })
+        .limit(5);
+
+      if (error) throw error;
+      setProximasEvaluaciones(data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadProximasEvaluaciones();
+  }, [user]);
+
+  // Convertir eventos del calendario a tareas para la bandeja
+  const calendarTasks = proximasEvaluaciones.slice(0, 3).map((evento) => ({
+    id: evento.id,
+    title: evento.titulo,
+    description: evento.descripcion || `${evento.tipo} programado`,
+    priority: evento.prioridad === 'alta' ? 'high' as const : 
+              evento.prioridad === 'media' ? 'medium' as const : 'low' as const,
+    status: evento.estado === 'completado' ? 'completed' as const : 
+            evento.estado === 'programado' ? 'pending' as const : 'in-progress' as const,
+    dueTime: format(new Date(evento.fecha_inicio), "HH:mm"),
+  }));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -120,7 +106,7 @@ export default function Dashboard() {
         />
         <KPICard
           title="Evaluaciones Programadas"
-          value="7"
+          value={proximasEvaluaciones.length.toString()}
           icon={Calendar}
           description="Esta semana"
           trend={{ value: 5.7, isPositive: true }}
@@ -135,9 +121,15 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {mockTasks.map((task) => (
-                <TaskItem key={task.id} {...task} />
-              ))}
+              {calendarTasks.length > 0 ? (
+                calendarTasks.map((task) => (
+                  <TaskItem key={task.id} {...task} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay tareas pendientes. Crea eventos en el calendario.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -147,22 +139,32 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
-              Próximas Evaluaciones
+              Próximos Eventos
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {mockProximasEvaluaciones.map((evaluacion) => (
-                <div key={evaluacion.id} className="flex items-start justify-between p-2 border rounded">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{evaluacion.puesto}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(evaluacion.fecha).toLocaleDateString("es-ES")} a las {evaluacion.hora}
-                    </p>
+              {proximasEvaluaciones.length > 0 ? (
+                proximasEvaluaciones.map((evaluacion) => (
+                  <div key={evaluacion.id} className="flex items-start justify-between p-2 border rounded">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{evaluacion.titulo}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(evaluacion.fecha_inicio), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                      </p>
+                      <div className="flex gap-1 mt-1">
+                        <span className="text-xs bg-muted px-1 rounded capitalize">{evaluacion.tipo}</span>
+                        <span className="text-xs bg-muted px-1 rounded capitalize">{evaluacion.prioridad}</span>
+                      </div>
+                    </div>
+                    <Eye className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <Eye className="w-4 h-4 text-muted-foreground" />
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay eventos próximos. Ve al calendario para crear uno.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -177,16 +179,27 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {mockActividadReciente.map((actividad) => (
-                <div key={actividad.id} className="text-sm">
-                  <p>
-                    <span className="font-medium">{actividad.usuario}</span>{" "}
-                    {actividad.accion}{" "}
-                    <span className="font-medium">{actividad.objeto}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">{actividad.timestamp}</p>
-                </div>
-              ))}
+              <div className="text-sm">
+                <p>
+                  <span className="font-medium">Sistema</span>{" "}
+                  actualizó la información del calendario
+                </p>
+                <p className="text-xs text-muted-foreground">hace 2 min</p>
+              </div>
+              <div className="text-sm">
+                <p>
+                  <span className="font-medium">Usuario</span>{" "}
+                  creó un nuevo evento en el calendario
+                </p>
+                <p className="text-xs text-muted-foreground">hace 15 min</p>
+              </div>
+              <div className="text-sm">
+                <p>
+                  <span className="font-medium">Sistema</span>{" "}
+                  sincronizó eventos con la base de datos
+                </p>
+                <p className="text-xs text-muted-foreground">hace 1 hora</p>
+              </div>
             </div>
           </CardContent>
         </Card>

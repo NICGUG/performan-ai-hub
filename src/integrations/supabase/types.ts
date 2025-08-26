@@ -93,6 +93,62 @@ export type Database = {
           },
         ]
       }
+      eventos_calendario: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string
+          id: string
+          prioridad: string
+          puesto_relacionado: string | null
+          recordatorios: string[] | null
+          tipo: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio: string
+          id?: string
+          prioridad?: string
+          puesto_relacionado?: string | null
+          recordatorios?: string[] | null
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          id?: string
+          prioridad?: string
+          puesto_relacionado?: string | null
+          recordatorios?: string[] | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_calendario_puesto_relacionado_fkey"
+            columns: ["puesto_relacionado"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       puestos: {
         Row: {
           area: string
