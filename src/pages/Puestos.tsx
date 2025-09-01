@@ -203,6 +203,16 @@ export default function Puestos() {
     return filteredPuestos.filter(p => p.estado.toLowerCase() === status.toLowerCase());
   };
 
+  const getPuestosByArea = () => {
+    const areas = Array.from(new Set(filteredPuestos.map(p => p.area)));
+    return areas.reduce((acc, area) => {
+      acc[area] = filteredPuestos.filter(p => p.area === area);
+      return acc;
+    }, {} as Record<string, Puesto[]>);
+  };
+
+  const puestosByArea = getPuestosByArea();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -259,8 +269,26 @@ export default function Puestos() {
           <TabsTrigger value="publicado">Publicados ({getPuestosByStatus("publicado").length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={selectedTab} className="space-y-4">
-          {getPuestosByStatus(selectedTab).map((puesto) => (
+        <TabsContent value={selectedTab} className="space-y-6">
+          {Object.entries(puestosByArea).map(([area, puestosEnArea]) => {
+            const puestosFiltered = selectedTab === "todos" 
+              ? puestosEnArea 
+              : puestosEnArea.filter(p => p.estado.toLowerCase() === selectedTab.toLowerCase());
+            
+            if (puestosFiltered.length === 0) return null;
+            
+            return (
+              <div key={area} className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary" />
+                  <h2 className="text-xl font-semibold">{area}</h2>
+                  <Badge variant="secondary" className="text-xs">
+                    {puestosFiltered.length} puesto{puestosFiltered.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-4 pl-7">
+                  {puestosFiltered.map((puesto) => (
             <Card key={puesto.id} className="shadow-card hover:shadow-floating transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
@@ -301,25 +329,6 @@ export default function Puestos() {
                             <div key={doc.id} className="flex items-center justify-between text-xs">
                               <span className="truncate">{doc.nombre_archivo}</span>
                               <div className="flex items-center gap-1">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-6xl h-[90vh]">
-                                    <DialogHeader>
-                                      <DialogTitle>{doc.nombre_archivo}</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="flex-1 h-full">
-                                      <DocumentPreview documento={doc} />
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -358,10 +367,6 @@ export default function Puestos() {
                       Subir
                     </Button>
                     <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      Ver
-                    </Button>
-                    <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
                     </Button>
@@ -382,8 +387,12 @@ export default function Puestos() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+                  </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </TabsContent>
       </Tabs>
     </div>
