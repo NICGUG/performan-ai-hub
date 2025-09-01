@@ -61,6 +61,7 @@ export default function Puestos() {
   }, []);
 
   const fetchPuestos = async () => {
+    console.log('🔄 Starting fetchPuestos...');
     try {
       const { data, error } = await supabase
         .from('puestos')
@@ -68,25 +69,28 @@ export default function Puestos() {
         .order('area', { ascending: true });
 
       if (error) {
-        console.error('Error fetching puestos:', error);
+        console.error('❌ Error fetching puestos:', error);
         throw error;
       }
       
-      console.log('Fetched puestos:', data);
+      console.log('✅ Fetched puestos:', data?.length, 'positions');
       setPuestos(data || []);
       
       // Fetch documents for each position
       if (data && data.length > 0) {
+        console.log('📄 Fetching documents for', data.length, 'positions...');
         await fetchDocumentos(data.map((p: any) => p.id));
+        console.log('✅ Documents fetched successfully');
       }
     } catch (error) {
-      console.error('Error in fetchPuestos:', error);
+      console.error('❌ Error in fetchPuestos:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los puestos",
         variant: "destructive"
       });
     } finally {
+      console.log('🏁 Setting loading to false');
       setLoading(false);
     }
   };
