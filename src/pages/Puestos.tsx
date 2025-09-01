@@ -63,18 +63,24 @@ export default function Puestos() {
   const fetchPuestos = async () => {
     try {
       const { data, error } = await supabase
-        .from('puestos' as any)
+        .from('puestos')
         .select('*')
-        .order('fecha_creacion', { ascending: false });
+        .order('area', { ascending: true });
 
-      if (error) throw error;
-      setPuestos((data || []) as unknown as Puesto[]);
+      if (error) {
+        console.error('Error fetching puestos:', error);
+        throw error;
+      }
+      
+      console.log('Fetched puestos:', data);
+      setPuestos(data || []);
       
       // Fetch documents for each position
       if (data && data.length > 0) {
         await fetchDocumentos(data.map((p: any) => p.id));
       }
     } catch (error) {
+      console.error('Error in fetchPuestos:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los puestos",
