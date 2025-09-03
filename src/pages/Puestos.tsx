@@ -339,6 +339,25 @@ export default function Puestos() {
                             <div key={doc.id} className="flex items-center justify-between text-xs">
                               <span className="truncate">{doc.nombre_archivo}</span>
                               <div className="flex items-center gap-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-6xl h-[90vh]">
+                                    <DialogHeader>
+                                      <DialogTitle>{doc.nombre_archivo}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex-1 h-full">
+                                      <DocumentPreview documento={doc} />
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -375,6 +394,10 @@ export default function Puestos() {
                     >
                       <Upload className="w-4 h-4 mr-1" />
                       Subir
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Eye className="w-4 h-4 mr-1" />
+                      Ver
                     </Button>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
