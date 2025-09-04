@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ProcesarDocumentosButton } from "@/components/ProcesarDocumentosButton";
+import { useToast } from "@/hooks/use-toast";
 
 interface AnalyticsData {
   area: string;
@@ -109,6 +111,7 @@ export default function Analiticas() {
   const [selectedDimension, setSelectedDimension] = useState("todas");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -219,7 +222,7 @@ export default function Analiticas() {
           Math.round((areaData.responsabilidadPorEquipo.reduce((a: number, b: number) => a + b, 0) / areaData.responsabilidadPorEquipo.length) * 10) / 10 : 0,
         iniciativa: areaData.iniciativa.length > 0 ? 
           Math.round((areaData.iniciativa.reduce((a: number, b: number) => a + b, 0) / areaData.iniciativa.length) * 10) / 10 : 0,
-        totalPuestos: areaData.puestos.size
+        totalPuestos: areaData.totalPuestos.size
       }));
 
       console.log('Datos analíticos procesados:', analyticsResult);
@@ -314,6 +317,11 @@ export default function Analiticas() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Botón para procesar documentos si no hay valoraciones */}
+      {analyticsData.length === 0 && (
+        <ProcesarDocumentosButton />
+      )}
 
       <Tabs defaultValue="por-area">
         <TabsList>
