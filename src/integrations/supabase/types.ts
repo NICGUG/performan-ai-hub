@@ -191,6 +191,63 @@ export type Database = {
         }
         Relationships: []
       }
+      valoraciones_documentos: {
+        Row: {
+          created_at: string
+          criterio: string
+          documento_id: string
+          fecha_extraccion: string
+          id: string
+          metodo_extraccion: string
+          puesto_id: string
+          puntuacion: number
+          revisado: boolean
+          texto_original: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criterio: string
+          documento_id: string
+          fecha_extraccion?: string
+          id?: string
+          metodo_extraccion?: string
+          puesto_id: string
+          puntuacion: number
+          revisado?: boolean
+          texto_original?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criterio?: string
+          documento_id?: string
+          fecha_extraccion?: string
+          id?: string
+          metodo_extraccion?: string
+          puesto_id?: string
+          puntuacion?: number
+          revisado?: boolean
+          texto_original?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valoraciones_documentos_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_puesto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valoraciones_documentos_puesto_id_fkey"
+            columns: ["puesto_id"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

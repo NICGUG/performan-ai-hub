@@ -14,6 +14,7 @@ interface AnalyticsData {
   experiencia: number;
   autonomia: number;
   responsabilidadPorEquipo: number;
+  iniciativa: number;
   totalPuestos: number;
 }
 
@@ -117,68 +118,113 @@ export default function Analiticas() {
     try {
       setLoading(true);
       
-      // Fetch evaluations with position data
-      const { data: evaluaciones, error } = await supabase
+      // Obtener evaluaciones manuales
+      const { data: evaluaciones, error: evalError } = await supabase
         .from('evaluaciones_puesto')
         .select(`
           *,
           puestos (
-            titulo,
-            area
+            area,
+            titulo
           )
         `);
 
-      if (error) throw error;
+      if (evalError) {
+        console.error('Error al obtener evaluaciones:', evalError);
+        throw evalError;
+      }
 
-      // Group by area and calculate averages
-      const dataByArea: { [key: string]: any } = {};
-      
-      evaluaciones?.forEach((evaluacion: any) => {
-        const area = evaluacion.puestos?.area || 'Sin área';
+      // Obtener valoraciones extraídas de documentos
+      const { data: valoraciones, error: valorError } = await supabase
+        .from('valoraciones_documentos')
+        .select(`
+          *,
+          puestos (
+            area,
+            titulo
+          )
+        `);
+
+      if (valorError) {
+        console.error('Error al obtener valoraciones de documentos:', valorError);
+        throw valorError;
+      }
+
+      console.log('Evaluaciones obtenidas:', evaluaciones?.length || 0);
+      console.log('Valoraciones de documentos obtenidas:', valoraciones?.length || 0);
+
+      // Combinar evaluaciones manuales y valoraciones de documentos
+      const todasLasEvaluaciones = [
+        ...(evaluaciones || []).map(e => ({ ...e, origen: 'manual' })),
+        ...(valoraciones || []).map(v => ({ 
+          ...v, 
+          origen: 'documento',
+          puestos: v.puestos
+        }))
+      ];
+
+      if (todasLasEvaluaciones.length === 0) {
+        console.log('No se encontraron evaluaciones ni valoraciones');
+        setAnalyticsData([]);
+        return;
+      }
+
+      // Agrupar por área y calcular promedios
+      const dataByArea = todasLasEvaluaciones.reduce((acc, item) => {
+        const area = item.puestos?.area || 'Sin área';
         
-        if (!dataByArea[area]) {
-          dataByArea[area] = {
+        if (!acc[area]) {
+          acc[area] = {
             area,
             formacionBasica: [],
             experiencia: [],
             autonomia: [],
             responsabilidadPorEquipo: [],
-            puestos: new Set()
+            iniciativa: [],
+            totalPuestos: new Set()
           };
         }
+
+        acc[area].totalPuestos.add(item.puesto_id);
+
+        // Mapear criterios a campos
+        const criterio = item.criterio?.toLowerCase();
+        const puntuacion = item.puntuacion || 0;
         
-        dataByArea[area].puestos.add(evaluacion.puesto_id);
-        
-        if (evaluacion.criterio === 'Formación básica') {
-          dataByArea[area].formacionBasica.push(evaluacion.puntuacion);
-        } else if (evaluacion.criterio === 'Experiencia') {
-          dataByArea[area].experiencia.push(evaluacion.puntuacion);
-        } else if (evaluacion.criterio === 'Autonomía') {
-          dataByArea[area].autonomia.push(evaluacion.puntuacion);
-        } else if (evaluacion.criterio === 'Responsabilidad por equipo') {
-          dataByArea[area].responsabilidadPorEquipo.push(evaluacion.puntuacion);
+        if (criterio?.includes('formación') || criterio?.includes('formacion')) {
+          acc[area].formacionBasica.push(puntuacion);
+        } else if (criterio === 'experiencia') {
+          acc[area].experiencia.push(puntuacion);
+        } else if (criterio?.includes('autonomía') || criterio?.includes('autonomia')) {
+          acc[area].autonomia.push(puntuacion);
+        } else if (criterio?.includes('responsabilidad')) {
+          acc[area].responsabilidadPorEquipo.push(puntuacion);
+        } else if (criterio === 'iniciativa') {
+          acc[area].iniciativa.push(puntuacion);
         }
-      });
-      
-      // Calculate averages
+
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Calcular promedios
       const analyticsResult = Object.values(dataByArea).map((areaData: any) => ({
         area: areaData.area,
-        formacionBasica: areaData.formacionBasica.length > 0 
-          ? areaData.formacionBasica.reduce((a: number, b: number) => a + b, 0) / areaData.formacionBasica.length 
-          : 0,
-        experiencia: areaData.experiencia.length > 0 
-          ? areaData.experiencia.reduce((a: number, b: number) => a + b, 0) / areaData.experiencia.length 
-          : 0,
-        autonomia: areaData.autonomia.length > 0 
-          ? areaData.autonomia.reduce((a: number, b: number) => a + b, 0) / areaData.autonomia.length 
-          : 0,
-        responsabilidadPorEquipo: areaData.responsabilidadPorEquipo.length > 0 
-          ? areaData.responsabilidadPorEquipo.reduce((a: number, b: number) => a + b, 0) / areaData.responsabilidadPorEquipo.length 
-          : 0,
+        formacionBasica: areaData.formacionBasica.length > 0 ? 
+          Math.round((areaData.formacionBasica.reduce((a: number, b: number) => a + b, 0) / areaData.formacionBasica.length) * 10) / 10 : 0,
+        experiencia: areaData.experiencia.length > 0 ? 
+          Math.round((areaData.experiencia.reduce((a: number, b: number) => a + b, 0) / areaData.experiencia.length) * 10) / 10 : 0,
+        autonomia: areaData.autonomia.length > 0 ? 
+          Math.round((areaData.autonomia.reduce((a: number, b: number) => a + b, 0) / areaData.autonomia.length) * 10) / 10 : 0,
+        responsabilidadPorEquipo: areaData.responsabilidadPorEquipo.length > 0 ? 
+          Math.round((areaData.responsabilidadPorEquipo.reduce((a: number, b: number) => a + b, 0) / areaData.responsabilidadPorEquipo.length) * 10) / 10 : 0,
+        iniciativa: areaData.iniciativa.length > 0 ? 
+          Math.round((areaData.iniciativa.reduce((a: number, b: number) => a + b, 0) / areaData.iniciativa.length) * 10) / 10 : 0,
         totalPuestos: areaData.puestos.size
       }));
-      
+
+      console.log('Datos analíticos procesados:', analyticsResult);
       setAnalyticsData(analyticsResult);
+      
     } catch (error) {
       console.error('Error fetching analytics data:', error);
     } finally {
@@ -245,6 +291,7 @@ export default function Analiticas() {
                     <SelectItem value="experiencia">Experiencia</SelectItem>
                     <SelectItem value="autonomia">Autonomía</SelectItem>
                     <SelectItem value="responsabilidad">Responsabilidad por equipo</SelectItem>
+                    <SelectItem value="iniciativa">Iniciativa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -302,6 +349,7 @@ export default function Analiticas() {
                       <th className="text-center py-2">Experiencia</th>
                       <th className="text-center py-2">Autonomía</th>
                       <th className="text-center py-2">Responsabilidad por Equipo</th>
+                      <th className="text-center py-2">Iniciativa</th>
                       <th className="text-center py-2">Total Puestos</th>
                     </tr>
                   </thead>
@@ -320,6 +368,9 @@ export default function Analiticas() {
                         </td>
                         <td className="text-center">
                           <Badge variant="outline">{area.responsabilidadPorEquipo.toFixed(1)}</Badge>
+                        </td>
+                        <td className="text-center">
+                          <Badge variant="outline">{area.iniciativa.toFixed(1)}</Badge>
                         </td>
                         <td className="text-center text-muted-foreground">{area.totalPuestos}</td>
                       </tr>

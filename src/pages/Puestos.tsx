@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ExtraerValoraciones } from "@/components/ExtraerValoraciones";
 
 interface Puesto {
   id: string;
@@ -241,10 +242,20 @@ export default function Puestos() {
             Crea, edita y gestiona descripciones de puestos con IA integrada.
           </p>
         </div>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Puesto
-        </Button>
+        <div className="flex gap-2">
+          <ExtraerValoraciones 
+            onSuccess={() => {
+              toast({
+                title: "Éxito",
+                description: "Valoraciones extraídas de todos los documentos",
+              });
+            }} 
+          />
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Puesto
+          </Button>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -395,10 +406,12 @@ export default function Puestos() {
                       <Upload className="w-4 h-4 mr-1" />
                       Subir
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      Ver
-                    </Button>
+                    <ExtraerValoraciones 
+                      onSuccess={() => {
+                        // Recargar datos si es necesario
+                        console.log('Valoraciones extraídas exitosamente');
+                      }} 
+                    />
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
