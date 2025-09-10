@@ -75,9 +75,10 @@ export default {
 				}
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				lg: 'calc(var(--radius) + 4px)',
+				md: 'var(--radius)',
+				sm: 'calc(var(--radius) - 2px)',
+				xs: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -111,7 +112,15 @@ export default {
 			boxShadow: {
 				'elegant': 'var(--shadow-elegant)',
 				'card': 'var(--shadow-card)',
-				'floating': 'var(--shadow-floating)'
+				'floating': 'var(--shadow-floating)',
+				'apple': 'var(--shadow-apple)'
+			},
+			fontFamily: {
+				sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+			},
+			spacing: {
+				'18': '4.5rem',
+				'88': '22rem',
 			}
 		}
 	},

@@ -2,128 +2,136 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Performan Hub Design System - Professional HR Platform
+/* Apple-Inspired Design System
+Clean, minimal, elegant - inspired by Apple's design language
 All colors MUST be HSL for consistency.
 */
 
 @layer base {
   :root {
-    /* Core Brand Colors - Professional Blue & Accent Green */
-    --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
+    /* Apple-inspired neutral palette */
+    --background: 0 0% 99%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Primary - Corporate Blue */
-    --primary: 217 91% 60%;
+    /* Primary - Apple Blue */
+    --primary: 212 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 100% 70%;
+    --primary-glow: 212 100% 65%;
 
-    /* Secondary - Success Green */
-    --secondary: 142 69% 58%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-soft: 142 69% 95%;
+    /* Secondary - Subtle Gray */
+    --secondary: 210 6% 93%;
+    --secondary-foreground: 0 0% 9%;
+    --secondary-soft: 210 6% 97%;
 
-    /* Muted Colors */
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Muted Colors - Apple's refined grays */
+    --muted: 210 6% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent - Warning Orange */
-    --accent: 25 95% 53%;
+    /* Accent - Apple Orange */
+    --accent: 28 100% 52%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 25 95% 95%;
+    --accent-soft: 28 100% 96%;
 
-    /* Status Colors */
-    --success: 142 69% 58%;
+    /* Status Colors - Apple system colors */
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 25 95% 53%;
-    --warning-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --warning: 35 91% 60%;
+    --warning-foreground: 0 0% 9%;
+    --destructive: 1 83% 63%;
     --destructive-foreground: 0 0% 100%;
 
-    /* UI Elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    /* UI Elements - Minimal borders and subtle focus */
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 212 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Gradients for Modern Look */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    /* Apple-style gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(212 100% 50%) 0%, hsl(212 100% 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 99%) 0%, hsl(210 6% 96%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 6% 98%) 100%);
     
-    /* Glass Effects */
-    --glass-bg: hsla(0, 0%, 100%, 0.8);
-    --glass-border: hsla(220, 13%, 91%, 0.3);
+    /* Apple glass/frosted effects */
+    --glass-bg: hsla(0, 0%, 100%, 0.85);
+    --glass-border: hsla(0, 0%, 89%, 0.2);
     
-    /* Shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.1);
-    --shadow-card: 0 4px 6px -1px hsl(215 25% 27% / 0.1), 0 2px 4px -1px hsl(215 25% 27% / 0.06);
-    --shadow-floating: 0 20px 25px -5px hsl(215 25% 27% / 0.1), 0 10px 10px -5px hsl(215 25% 27% / 0.04);
+    /* Apple-style shadows - more subtle */
+    --shadow-elegant: 0 4px 16px -4px hsl(0 0% 0% / 0.08);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-floating: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+    --shadow-apple: 0 0 0 1px hsl(0 0% 0% / 0.04), 0 1px 3px 0 hsl(0 0% 0% / 0.1);
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 215 25% 27%;
-    --sidebar-primary: 217 91% 60%;
+    /* Sidebar - Apple sidebar styling */
+    --sidebar-background: 210 6% 97%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 212 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 215 25% 27%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 210 6% 93%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 89%;
+    --sidebar-ring: 212 100% 50%;
   }
 
   .dark {
-    --background: 215 28% 17%;
-    --foreground: 0 0% 95%;
+    /* Apple dark mode - sophisticated and elegant */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
 
-    --card: 215 28% 17%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 215 28% 17%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 217 91% 60%;
+    --primary: 212 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 100% 70%;
+    --primary-glow: 212 100% 65%;
 
-    --secondary: 142 69% 58%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-soft: 142 69% 15%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-soft: 0 0% 11%;
 
-    --muted: 215 28% 25%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 25 95% 53%;
+    --accent: 28 100% 52%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 25 95% 15%;
+    --accent-soft: 0 0% 11%;
 
-    --success: 142 69% 58%;
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 25 95% 53%;
-    --warning-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --warning: 35 91% 60%;
+    --warning-foreground: 0 0% 9%;
+    --destructive: 1 83% 63%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 217 91% 60%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 212 100% 50%;
 
-    --glass-bg: hsla(215, 28%, 17%, 0.8);
-    --glass-border: hsla(215, 28%, 25%, 0.3);
+    --glass-bg: hsla(0, 0%, 7%, 0.85);
+    --glass-border: hsla(0, 0%, 14%, 0.2);
 
-    --sidebar-background: 215 32% 15%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 217 91% 60%;
+    --shadow-elegant: 0 4px 16px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
+    --shadow-floating: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
+    --shadow-apple: 0 0 0 1px hsl(0 0% 0% / 0.2), 0 1px 3px 0 hsl(0 0% 0% / 0.4);
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 212 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 25%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 215 28% 25%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 212 100% 50%;
   }
 }
 
@@ -133,6 +141,40 @@ All colors MUST be HSL for consistency.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Apple-style typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+
+  /* Apple-style button animations */
+  .apple-button {
+    @apply transition-all duration-200 ease-out;
+    transform: translateZ(0);
+  }
+
+  .apple-button:active {
+    @apply scale-95;
+  }
+
+  /* Apple-style glass cards */
+  .apple-glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Apple-style shadows */
+  .apple-shadow {
+    box-shadow: var(--shadow-apple);
+  }
+
+  /* Apple-style focus states */
+  .apple-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 }

@@ -60,21 +60,21 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-medium tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-lg">
             Bienvenido/a al Hub de Puestos con IA. Gestiona descripciones y coordinación interna.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
+        <div className="flex gap-3">
+          <Button variant="outline" size="lg">
             <TrendingUp className="w-4 h-4 mr-2" />
             Ver Analíticas
           </Button>
-          <Button>
+          <Button size="lg">
             <Building2 className="w-4 h-4 mr-2" />
             Nuevo Puesto
           </Button>
@@ -113,20 +113,20 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {/* Tasks Section */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Bandeja de Tareas</CardTitle>
+        <Card className="p-1">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Bandeja de Tareas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="space-y-3">
               {calendarTasks.length > 0 ? (
                 calendarTasks.map((task) => (
                   <TaskItem key={task.id} {...task} />
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-6">
                   No hay tareas pendientes. Crea eventos en el calendario.
                 </p>
               )}
